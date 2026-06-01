@@ -1,0 +1,50 @@
+═══════════════════════════════════════════════════════════
+  HƯỚNG DẪN SỬ DỤNG – WEB TOUR VIETKITE + TRANG ADMIN
+═══════════════════════════════════════════════════════════
+
+CÁC FILE TRONG BỘ BÀN GIAO
+────────────────────────────
+  index.html      → Trang web tour (cho khách xem)
+  admin.html      → Trang quản trị (chỉnh text & ảnh)
+  cms-default.js  → Nội dung mặc định
+  cms.js          → Engine áp dụng nội dung đã lưu
+  HUONG-DAN.txt   → File này
+
+ĐĂNG NHẬP ADMIN
+────────────────────────────
+  1. Mở file admin.html bằng trình duyệt (Chrome, Edge...)
+  2. Mật khẩu mặc định: vietkite2026
+  3. Đổi mật khẩu: mở admin.html bằng Notepad, tìm dòng:
+       password: "vietkite2026"
+     và sửa thành mật khẩu mới.
+
+CHỈNH SỬA NỘI DUNG
+────────────────────────────
+  • Sửa ô text → bấm "Lưu thay đổi"
+  • Ảnh: dán link https://... hoặc bấm Chọn file (ảnh < 800KB)
+  • Danh sách (lịch trình, ghi chú...): mỗi dòng cách nhau bằng dấu |
+  • Mở index.html trên CÙNG trình duyệt để xem kết quả
+
+SAO LƯU / CHUYỂN MÁY
+────────────────────────────
+  • Xuất JSON: lưu file backup
+  • Nhập JSON: khôi phục trên máy khác (sau đó mở index.html)
+
+LƯU Ý QUAN TRỌNG
+────────────────────────────
+  • Nội dung lưu trong trình duyệt (localStorage), không lưu trên server.
+  • Xóa cache trình duyệt có thể mất nội dung đã sửa → nên Xuất JSON định kỳ.
+  • Upload web lên hosting: copy đủ 4 file html/js; mỗi máy truy cập admin
+    cần Lưu hoặc Nhập JSON riêng (trừ khi dùng chung một máy).
+
+ĐẶT WEB LÊN HOSTING
+────────────────────────────
+  Upload toàn bộ file vào thư mục public_html (hoặc tương đương).
+  Truy cập: https://tenmien.com/index.html
+  Admin:   https://tenmien.com/admin.html
+
+HỖ TRỢ KỸ THUẬT
+────────────────────────────
+  Form đặt tour vẫn gửi qua Google Sheet như cũ (không đổi trong admin).
+
+═══════════════════════════════════════════════════════════
