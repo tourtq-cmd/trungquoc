@@ -1,12 +1,15 @@
 /**
- * VietKite CMS
- * Thứ tự ưu tiên: Firebase → content.json → localStorage → mặc định
+ * VietKite CMS — Firebase là nguồn chính cho mọi máy
  */
 (function () {
   var STORAGE_KEY = "vietkite_cms_v1";
   var CONTENT_FILE = "content.json";
 
   window.CMS_fileData = null;
+
+  function isAdminPage() {
+    return !!document.getElementById("adminApp");
+  }
 
   function getStored() {
     try {
@@ -18,31 +21,35 @@
     }
   }
 
-  function mergeSources(base) {
-    if (window.CMS_firebaseData) Object.assign(base, window.CMS_firebaseData);
-    if (window.CMS_fileData) Object.assign(base, window.CMS_fileData);
-    var stored = getStored();
-    if (stored) Object.assign(base, stored);
-    return base;
-  }
-
   window.CMS_getContent = function () {
     var base = Object.assign({}, window.CMS_DEFAULT || {});
+
     if (window.CMS_firebaseData) {
       Object.assign(base, window.CMS_firebaseData);
       return base;
     }
-    if (window.CMS_fileData) {
-      Object.assign(base, window.CMS_fileData);
+
+    if (!isAdminPage()) {
+      if (window.CMS_fileData) Object.assign(base, window.CMS_fileData);
       return base;
     }
+
+    if (window.CMS_fileData) Object.assign(base, window.CMS_fileData);
     var stored = getStored();
     if (stored) Object.assign(base, stored);
     return base;
   };
 
   window.CMS_getContentForAdmin = function () {
-    return mergeSources(Object.assign({}, window.CMS_DEFAULT || {}));
+    var base = Object.assign({}, window.CMS_DEFAULT || {});
+    if (window.CMS_firebaseData) {
+      Object.assign(base, window.CMS_firebaseData);
+      return base;
+    }
+    var stored = getStored();
+    if (stored) Object.assign(base, stored);
+    if (window.CMS_fileData) Object.assign(base, window.CMS_fileData);
+    return base;
   };
 
   window.CMS_saveContent = function (data) {
@@ -51,16 +58,6 @@
 
   window.CMS_clearContent = function () {
     localStorage.removeItem(STORAGE_KEY);
-  };
-
-  window.CMS_getSourceLabel = function () {
-    if (window.CMS_firebaseData)
-      return "Firebase ☁️ — mọi máy xem giống nhau khi đã Lưu";
-    if (window.CMS_fileData)
-      return "content.json trên hosting (chưa dùng Firebase)";
-    if (getStored())
-      return "Chỉ trên trình duyệt máy này (localStorage)";
-    return "Nội dung mặc định gốc";
   };
 
   window.CMS_loadRemote = function () {
@@ -91,9 +88,7 @@
     });
     var a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download =
-      filename ||
-      "content.json";
+    a.download = filename || "content.json";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -127,8 +122,10 @@
   }
 
   function setBg(el, val) {
-    if (el && val) el.style.backgroundImage =
-      'url("' + String(val).replace(/"/g, "") + '")';
+    if (el && val) {
+      el.style.backgroundImage =
+        'url("' + String(val).replace(/"/g, "") + '")';
+    }
   }
 
   window.CMS_apply = function () {
@@ -194,29 +191,48 @@
     if (fb && c["contact.fb"]) fb.href = c["contact.fb"];
   };
 
+  function cmsMarkReady() {
+    document.documentElement.classList.remove("cms-loading");
+    document.documentElement.classList.add("cms-ready");
+  }
+
   window.CMS_init = function () {
+    document.documentElement.classList.add("cms-loading");
+
     var loadFb =
       typeof window.CMS_loadFirebase === "function"
         ? window.CMS_loadFirebase()
         : Promise.resolve(null);
+
     return loadFb
-      .then(function () {
-        return window.CMS_loadRemote();
-      })
-      .then(function () {
+      .then(function (fbData) {
         window.CMS_apply();
-        return (
-          window.CMS_firebaseData ||
-          window.CMS_fileData ||
-          getStored()
-        );
+        cmsMarkReady();
+
+        if (!isAdminPage() && typeof window.CMS_watchFirebase === "function") {
+          window.CMS_watchFirebase(function () {
+            window.CMS_apply();
+          });
+        }
+
+        if (!fbData && !isAdminPage()) {
+          return window.CMS_loadRemote().then(function () {
+            window.CMS_apply();
+          });
+        }
+        return fbData;
+      })
+      .catch(function (err) {
+        console.error("CMS_init:", err);
+        cmsMarkReady();
+        return window.CMS_loadRemote().then(function () {
+          window.CMS_apply();
+        });
       });
   };
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", function () {
-      window.CMS_init();
-    });
+    document.addEventListener("DOMContentLoaded", window.CMS_init);
   } else {
     window.CMS_init();
   }

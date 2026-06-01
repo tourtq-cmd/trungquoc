@@ -13,4 +13,11 @@
 
   Lần đầu: tạo user + Publish Rules (MAT-KHAU-ADMIN.txt).
 
+  QUAN TRỌNG — Upload hosting phải đủ file:
+  index.html, cms.js, cms-firebase.js, cms-default.js,
+  firebase-config.js, vk-cms-8k2m7p.html, admin-ui.js
+
+  Sau khi Lưu trên admin → máy khác mở index.html (Ctrl+F5).
+  Web tự cập nhật realtime khi có thay đổi mới.
+
 ═══════════════════════════════════════════════════════════
