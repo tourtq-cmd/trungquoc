@@ -3,21 +3,12 @@
 ═══════════════════════════════════════════════════════════
 
   Khách xem:     index.html
-  Sửa nội dung:  vk-cms-8k2m7p.html  (xem MAT-KHAU-ADMIN.txt)
-  admin.html:    404 — không dùng
+  Sửa nội dung:  admin.html  (mật khẩu trong MAT-KHAU-ADMIN.txt)
 
-  Bảo mật:
-  • Link admin đổi tên, khó đoán
-  • Mật khẩu lưu trên Firebase (không có trong code web)
-  • Firestore: chỉ user đăng nhập mới ghi được
+  Upload hosting đủ file:
+  index.html, admin.html, admin-ui.js,
+  cms.js, cms-firebase.js, cms-default.js, firebase-config.js
 
-  Lần đầu: tạo user + Publish Rules (MAT-KHAU-ADMIN.txt).
-
-  QUAN TRỌNG — Upload hosting phải đủ file:
-  index.html, cms.js, cms-firebase.js, cms-default.js,
-  firebase-config.js, vk-cms-8k2m7p.html, admin-ui.js
-
-  Sau khi Lưu trên admin → máy khác mở index.html (Ctrl+F5).
-  Web tự cập nhật realtime khi có thay đổi mới.
+  Lưu trên admin → mọi máy mở index.html thấy giống nhau (Firebase).
 
 ═══════════════════════════════════════════════════════════
