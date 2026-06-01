@@ -13,3 +13,6 @@ var firebaseConfig = {
 };
 
 window.FIREBASE_CONFIG = firebaseConfig;
+
+/** Email admin — chỉ user này đăng nhập được (tạo trong Firebase Authentication) */
+window.FIREBASE_ADMIN_EMAIL = "cms-admin@tourlao.vn";

@@ -1,11 +1,11 @@
 /**
- * Đồng bộ nội dung qua Cloud Firestore
- * Collection: cms → Document: content
+ * Firestore + Firebase Authentication
  */
 (function () {
   window.CMS_firebaseData = null;
   window.CMS_firebaseReady = false;
   window.CMS_db = null;
+  window.CMS_auth = null;
 
   var CMS_COLLECTION = "cms";
   var CMS_DOC = "content";
@@ -22,7 +22,6 @@
         return;
       }
       if (typeof firebase === "undefined") {
-        console.warn("Firebase SDK chưa load");
         resolve(false);
         return;
       }
@@ -31,12 +30,43 @@
           firebase.initializeApp(window.FIREBASE_CONFIG);
         }
         window.CMS_db = firebase.firestore();
+        window.CMS_auth = firebase.auth();
         window.CMS_firebaseReady = true;
         resolve(true);
       } catch (e) {
         console.error(e);
         resolve(false);
       }
+    });
+  };
+
+  window.CMS_getCurrentUser = function () {
+    return window.CMS_auth && window.CMS_auth.currentUser;
+  };
+
+  window.CMS_signIn = function (email, password) {
+    return window.CMS_initFirebase().then(function (ok) {
+      if (!ok) {
+        return Promise.reject(new Error("Firebase chưa cấu hình"));
+      }
+      return window.CMS_auth.signInWithEmailAndPassword(email, password);
+    });
+  };
+
+  window.CMS_signOut = function () {
+    if (window.CMS_auth) {
+      return window.CMS_auth.signOut();
+    }
+    return Promise.resolve();
+  };
+
+  window.CMS_onAuthChanged = function (callback) {
+    return window.CMS_initFirebase().then(function (ok) {
+      if (!ok || !window.CMS_auth) {
+        callback(null);
+        return;
+      }
+      window.CMS_auth.onAuthStateChanged(callback);
     });
   };
 
@@ -63,8 +93,11 @@
   window.CMS_saveFirebase = function (data) {
     return window.CMS_initFirebase().then(function (ok) {
       if (!ok) {
+        return Promise.reject(new Error("Chưa cấu hình firebase-config.js"));
+      }
+      if (!window.CMS_auth || !window.CMS_auth.currentUser) {
         return Promise.reject(
-          new Error("Chưa cấu hình firebase-config.js")
+          new Error("Chưa đăng nhập — không có quyền ghi Firestore")
         );
       }
       return window.CMS_db.collection(CMS_COLLECTION).doc(CMS_DOC).set({
@@ -74,12 +107,10 @@
     });
   };
 
-  window.CMS_isFirebaseActive = function () {
-    return !!(window.CMS_firebaseReady && window.CMS_firebaseData);
-  };
-
-  /** Lần đầu: đẩy nội dung mặc định lên Firestore nếu chưa có */
   window.CMS_seedFirebaseIfEmpty = function () {
+    if (!window.CMS_auth || !window.CMS_auth.currentUser) {
+      return Promise.resolve(null);
+    }
     return window.CMS_loadFirebase().then(function (data) {
       if (data) return data;
       if (!window.CMS_DEFAULT) return null;

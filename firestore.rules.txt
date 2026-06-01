@@ -1,19 +1,15 @@
-// Dán vào Firebase Console → Firestore Database → Rules → Publish
+// Firebase Console → Firestore → Rules → Publish (bắt buộc sau khi bật Authentication)
 
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Ai cũng đọc được nội dung web (khách xem trang)
     match /cms/{document} {
+      // Khách xem web: chỉ đọc
       allow read: if true;
 
-      // Cách 1 – Đang test (30 ngày): cho phép ghi tự do (đổi sau khi ổn định)
-      allow write: if true;
-
-      // Cách 2 – An toàn hơn: bật Email/Password trong Authentication,
-      // tạo 1 tài khoản admin, rồi thay dòng trên bằng:
-      // allow write: if request.auth != null;
+      // Chỉ tài khoản đã đăng nhập Firebase mới được ghi (admin)
+      allow write: if request.auth != null;
     }
   }
 }
