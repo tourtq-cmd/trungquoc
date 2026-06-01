@@ -1,0 +1,43 @@
+═══════════════════════════════════════════════════════════
+  BẠN CẦN GỬI / ĐIỀN GÌ TỪ FIREBASE?
+═══════════════════════════════════════════════════════════
+
+CÁCH 1 – TỰ ĐIỀN (KHUYÊN DÙNG, KHÔNG GỬI CHAT)
+────────────────────────────────────────────
+  1. Firebase Console → ⚙ Cài đặt dự án
+  2. Cuộn xuống "Ứng dụng của bạn" → chọn biểu tượng Web </>
+  3. Copy khối firebaseConfig
+  4. Mở file: firebase-config.js (trong folder web)
+  5. Dán 6 dòng vào (apiKey, authDomain, projectId...)
+
+CÁCH 2 – GỬI CHO DEV (COPY PASTE VÀO CHAT)
+────────────────────────────────────────────
+  Gửi nguyên khối sau (thay bằng của bạn):
+
+  apiKey: "..."
+  authDomain: "..."
+  projectId: "..."
+  storageBucket: "..."
+  messagingSenderId: "..."
+  appId: "..."
+
+  KHÔNG CẦN gửi: mật khẩu Google, file JSON Service Account.
+
+ĐÃ BẬT TRÊN FIREBASE CHƯA?
+────────────────────────────────────────────
+  ☑ Firestore Database → Tạo database (chế độ test được)
+  ☑ Rules: mở file firestore.rules.txt → copy → dán → Publish
+  ☑ (Tuỳ chọn) Authentication → Email/Password nếu dùng rules bảo mật
+
+SAU KHI ĐIỀN XONG
+────────────────────────────────────────────
+  1. admin.html → đăng nhập → sửa thử → "Lưu lên Firebase"
+  2. Mở index.html (hoặc link hosting) trên máy khác → thấy đổi
+
+LỖI THƯỜNG GẶP
+────────────────────────────────────────────
+  • Permission denied → chưa Publish Rules hoặc chưa bật Firestore
+  • firebase-config trống → chưa dán apiKey
+  • Mở file:// → Firebase vẫn chạy; hosting https tốt hơn
+
+═══════════════════════════════════════════════════════════

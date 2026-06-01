@@ -1,7 +1,6 @@
 /**
  * VietKite CMS
- * - Trang web (index): đọc content.json trên hosting → mọi máy xem giống nhau
- * - Không có content.json: dùng localStorage (chỉ máy vừa sửa) hoặc mặc định
+ * Thứ tự ưu tiên: Firebase → content.json → localStorage → mặc định
  */
 (function () {
   var STORAGE_KEY = "vietkite_cms_v1";
@@ -19,27 +18,31 @@
     }
   }
 
-  /** Nguồn dùng cho trang công khai */
+  function mergeSources(base) {
+    if (window.CMS_firebaseData) Object.assign(base, window.CMS_firebaseData);
+    if (window.CMS_fileData) Object.assign(base, window.CMS_fileData);
+    var stored = getStored();
+    if (stored) Object.assign(base, stored);
+    return base;
+  }
+
   window.CMS_getContent = function () {
     var base = Object.assign({}, window.CMS_DEFAULT || {});
-
+    if (window.CMS_firebaseData) {
+      Object.assign(base, window.CMS_firebaseData);
+      return base;
+    }
     if (window.CMS_fileData) {
       Object.assign(base, window.CMS_fileData);
       return base;
     }
-
     var stored = getStored();
     if (stored) Object.assign(base, stored);
     return base;
   };
 
-  /** Admin: ưu tiên file trên server, rồi localStorage */
   window.CMS_getContentForAdmin = function () {
-    var base = Object.assign({}, window.CMS_DEFAULT || {});
-    if (window.CMS_fileData) Object.assign(base, window.CMS_fileData);
-    var stored = getStored();
-    if (stored) Object.assign(base, stored);
-    return base;
+    return mergeSources(Object.assign({}, window.CMS_DEFAULT || {}));
   };
 
   window.CMS_saveContent = function (data) {
@@ -51,8 +54,12 @@
   };
 
   window.CMS_getSourceLabel = function () {
-    if (window.CMS_fileData) return "content.json (áp dụng cho mọi người khi đã upload)";
-    if (getStored()) return "Chỉ lưu trên trình duyệt máy này — chưa có content.json trên server";
+    if (window.CMS_firebaseData)
+      return "Firebase ☁️ — mọi máy xem giống nhau khi đã Lưu";
+    if (window.CMS_fileData)
+      return "content.json trên hosting (chưa dùng Firebase)";
+    if (getStored())
+      return "Chỉ trên trình duyệt máy này (localStorage)";
     return "Nội dung mặc định gốc";
   };
 
@@ -188,10 +195,22 @@
   };
 
   window.CMS_init = function () {
-    return window.CMS_loadRemote().then(function () {
-      window.CMS_apply();
-      return window.CMS_fileData;
-    });
+    var loadFb =
+      typeof window.CMS_loadFirebase === "function"
+        ? window.CMS_loadFirebase()
+        : Promise.resolve(null);
+    return loadFb
+      .then(function () {
+        return window.CMS_loadRemote();
+      })
+      .then(function () {
+        window.CMS_apply();
+        return (
+          window.CMS_firebaseData ||
+          window.CMS_fileData ||
+          getStored()
+        );
+      });
   };
 
   if (document.readyState === "loading") {
