@@ -1,50 +1,48 @@
 ═══════════════════════════════════════════════════════════
-  HƯỚNG DẪN SỬ DỤNG – WEB TOUR VIETKITE + TRANG ADMIN
+  HƯỚNG DẪN – VÌ SAO MÁY KHÁC KHÔNG THẤY THAY ĐỔI?
 ═══════════════════════════════════════════════════════════
 
-CÁC FILE TRONG BỘ BÀN GIAO
-────────────────────────────
-  index.html      → Trang web tour (cho khách xem)
-  admin.html      → Trang quản trị (chỉnh text & ảnh)
-  cms-default.js  → Nội dung mặc định
-  cms.js          → Engine áp dụng nội dung đã lưu
-  HUONG-DAN.txt   → File này
+KHÔNG CÓ BACKEND = MỖI MÁY KHÔNG TỰ ĐỒNG BỘ
+────────────────────────────────────────────
+  • Bấm "Lưu" trong admin → lưu thêm vào TRÌNH DUYỆT máy đó.
+  • Máy khác / điện thoại khác / trình duyệt khác → KHÔNG thấy,
+    trừ khi bạn làm thêm bước bên dưới.
+
+  → Đây là lý do bạn sửa xong mở máy khác vẫn thấy bản cũ.
+
+CÁCH ĐÚNG ĐỂ MỌI NGƯỜI XEM GIỐNG NHAU (CÓ HOSTING)
+────────────────────────────────────────────
+  1. Vào admin.html → sửa nội dung
+  2. Bấm "Lưu & tải content.json"
+     → Máy tải file tên: content.json
+  3. Upload file content.json lên hosting,
+     CÙNG THƯ MỤC với index.html (ghi đè file cũ)
+  4. Khách mở https://tenmien.com/index.html → thấy bản mới
+
+  Mỗi lần sửa lại: Lưu → upload content.json mới.
+
+CHƯA CÓ HOSTING / CHỈ DÙNG FILE TRÊN MÁY
+────────────────────────────────────────────
+  • Máy A: Lưu → tải content.json
+  • Máy B: admin.html → "Nhập JSON" → chọn content.json
+  • Hoặc copy content.json vào cùng folder với index.html
+    (chỉ xem được qua hosting hoặc chạy local server,
+     không xem được nếu double-click file khi file://)
+
+MỞ FILE BẰNG DOUBLE-CLICK (file://)
+────────────────────────────────────────────
+  Trình duyệt KHÔNG đọc được content.json (bảo mật).
+  Chỉ thấy thay đổi trên ĐÚNG máy + ĐÚNG trình duyệt đã Lưu.
+  → Muốn test đúng: đưa lên hosting hoặc dùng Live Server.
 
 ĐĂNG NHẬP ADMIN
-────────────────────────────
-  1. Mở file admin.html bằng trình duyệt (Chrome, Edge...)
-  2. Mật khẩu mặc định: vietkite2026
-  3. Đổi mật khẩu: mở admin.html bằng Notepad, tìm dòng:
-       password: "vietkite2026"
-     và sửa thành mật khẩu mới.
+────────────────────────────────────────────
+  Mật khẩu mặc định: vietkite2026
+  Đổi trong admin.html → CONFIG.password
 
-CHỈNH SỬA NỘI DUNG
-────────────────────────────
-  • Sửa ô text → bấm "Lưu thay đổi"
-  • Ảnh: dán link https://... hoặc bấm Chọn file (ảnh < 800KB)
-  • Danh sách (lịch trình, ghi chú...): mỗi dòng cách nhau bằng dấu |
-  • Mở index.html trên CÙNG trình duyệt để xem kết quả
-
-SAO LƯU / CHUYỂN MÁY
-────────────────────────────
-  • Xuất JSON: lưu file backup
-  • Nhập JSON: khôi phục trên máy khác (sau đó mở index.html)
-
-LƯU Ý QUAN TRỌNG
-────────────────────────────
-  • Nội dung lưu trong trình duyệt (localStorage), không lưu trên server.
-  • Xóa cache trình duyệt có thể mất nội dung đã sửa → nên Xuất JSON định kỳ.
-  • Upload web lên hosting: copy đủ 4 file html/js; mỗi máy truy cập admin
-    cần Lưu hoặc Nhập JSON riêng (trừ khi dùng chung một máy).
-
-ĐẶT WEB LÊN HOSTING
-────────────────────────────
-  Upload toàn bộ file vào thư mục public_html (hoặc tương đương).
-  Truy cập: https://tenmien.com/index.html
-  Admin:   https://tenmien.com/admin.html
-
-HỖ TRỢ KỸ THUẬT
-────────────────────────────
-  Form đặt tour vẫn gửi qua Google Sheet như cũ (không đổi trong admin).
+FILE TRONG BỘ
+────────────────────────────────────────────
+  index.html, admin.html, cms.js, cms-default.js
+  content.json  ← tạo sau lần Lưu đầu; upload lên web
 
 ═══════════════════════════════════════════════════════════

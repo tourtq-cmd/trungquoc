@@ -1,9 +1,13 @@
 /**
- * VietKite CMS – áp dụng nội dung đã lưu lên trang web
- * Lưu trong localStorage key: vietkite_cms_v1
+ * VietKite CMS
+ * - Trang web (index): đọc content.json trên hosting → mọi máy xem giống nhau
+ * - Không có content.json: dùng localStorage (chỉ máy vừa sửa) hoặc mặc định
  */
 (function () {
   var STORAGE_KEY = "vietkite_cms_v1";
+  var CONTENT_FILE = "content.json";
+
+  window.CMS_fileData = null;
 
   function getStored() {
     try {
@@ -15,8 +19,24 @@
     }
   }
 
+  /** Nguồn dùng cho trang công khai */
   window.CMS_getContent = function () {
     var base = Object.assign({}, window.CMS_DEFAULT || {});
+
+    if (window.CMS_fileData) {
+      Object.assign(base, window.CMS_fileData);
+      return base;
+    }
+
+    var stored = getStored();
+    if (stored) Object.assign(base, stored);
+    return base;
+  };
+
+  /** Admin: ưu tiên file trên server, rồi localStorage */
+  window.CMS_getContentForAdmin = function () {
+    var base = Object.assign({}, window.CMS_DEFAULT || {});
+    if (window.CMS_fileData) Object.assign(base, window.CMS_fileData);
     var stored = getStored();
     if (stored) Object.assign(base, stored);
     return base;
@@ -30,9 +50,52 @@
     localStorage.removeItem(STORAGE_KEY);
   };
 
+  window.CMS_getSourceLabel = function () {
+    if (window.CMS_fileData) return "content.json (áp dụng cho mọi người khi đã upload)";
+    if (getStored()) return "Chỉ lưu trên trình duyệt máy này — chưa có content.json trên server";
+    return "Nội dung mặc định gốc";
+  };
+
+  window.CMS_loadRemote = function () {
+    return new Promise(function (resolve) {
+      if (location.protocol === "file:") {
+        resolve(null);
+        return;
+      }
+      fetch(CONTENT_FILE + "?v=" + Date.now())
+        .then(function (r) {
+          if (!r.ok) throw new Error("404");
+          return r.json();
+        })
+        .then(function (data) {
+          window.CMS_fileData = data;
+          resolve(data);
+        })
+        .catch(function () {
+          resolve(null);
+        });
+    });
+  };
+
+  window.CMS_downloadJson = function (data, filename) {
+    data = data || window.CMS_getContentForAdmin();
+    var blob = new Blob([JSON.stringify(data, null, 2)], {
+      type: "application/json",
+    });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download =
+      filename ||
+      "content.json";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+  };
+
   function pipeList(html, sep) {
-    var parts = (html || "").split(sep || "|");
-    return parts
+    return (html || "")
+      .split(sep || "|")
       .map(function (p) {
         return "<li>" + p.trim() + "</li>";
       })
@@ -57,7 +120,8 @@
   }
 
   function setBg(el, val) {
-    if (el && val) el.style.backgroundImage = 'url("' + val.replace(/"/g, "") + '")';
+    if (el && val) el.style.backgroundImage =
+      'url("' + String(val).replace(/"/g, "") + '")';
   }
 
   window.CMS_apply = function () {
@@ -92,11 +156,12 @@
     var bookSec = document.querySelector(".booking");
     if (bookSec && c["book.bg"]) {
       bookSec.style.backgroundImage =
-        'url("' + c["book.bg"].replace(/"/g, "") + '")';
+        'url("' + String(c["book.bg"]).replace(/"/g, "") + '")';
     }
 
     var priceList = document.querySelector("[data-cms-price-list]");
-    if (priceList && c["price.p2.list"]) applyPipeList(priceList, c["price.p2.list"], "|");
+    if (priceList && c["price.p2.list"])
+      applyPipeList(priceList, c["price.p2.list"], "|");
 
     [1, 2, 3, 4].forEach(function (d) {
       var meals = document.querySelector('[data-cms-meals="day' + d + '"]');
@@ -109,22 +174,31 @@
           })
           .join("");
       }
-      if (acts && c["day" + d + ".acts"]) applyPipeList(acts, c["day" + d + ".acts"], "|");
+      if (acts && c["day" + d + ".acts"])
+        applyPipeList(acts, c["day" + d + ".acts"], "|");
     });
 
     var tel = document.querySelector("[data-cms-tel]");
-    if (tel && c["contact.phone"]) {
+    if (tel && c["contact.phone"])
       tel.href = "tel:" + c["contact.phone"].replace(/\s/g, "");
-    }
     var zalo = document.querySelector("[data-cms-zalo]");
     if (zalo && c["contact.zalo"]) zalo.href = c["contact.zalo"];
     var fb = document.querySelector("[data-cms-fb]");
     if (fb && c["contact.fb"]) fb.href = c["contact.fb"];
   };
 
+  window.CMS_init = function () {
+    return window.CMS_loadRemote().then(function () {
+      window.CMS_apply();
+      return window.CMS_fileData;
+    });
+  };
+
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", window.CMS_apply);
+    document.addEventListener("DOMContentLoaded", function () {
+      window.CMS_init();
+    });
   } else {
-    window.CMS_apply();
+    window.CMS_init();
   }
 })();

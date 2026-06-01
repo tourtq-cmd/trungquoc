@@ -70,8 +70,10 @@ textarea{min-height:80px;resize:vertical}
 }
 .toast.show{opacity:1}
 .badge{display:inline-block;background:rgba(232,81,10,.12);color:var(--orange);font-size:11px;padding:2px 10px;border-radius:50px;font-weight:700;margin-left:8px}
-.info-box{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:14px 18px;font-size:13px;margin-bottom:20px;color:#1e40af}
+.info-box{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:14px 18px;font-size:13px;margin-bottom:12px;color:#1e40af}
 .info-box strong{display:block;margin-bottom:4px}
+.warn-box{background:#fff7ed;border:1px solid #fdba74;border-radius:10px;padding:14px 18px;font-size:13px;margin-bottom:12px;color:#9a3412}
+.status-box{background:#ecfdf5;border:1px solid #6ee7b7;border-radius:10px;padding:10px 16px;font-size:13px;margin-bottom:16px;color:#065f46;font-weight:600}
 .hidden{display:none!important}
 @media(max-width:600px){.hdr{position:static}}
 </style>
@@ -80,7 +82,7 @@ textarea{min-height:80px;resize:vertical}
 
 <div id="loginScreen" class="login-box wrap" style="margin-top:60px">
   <h1>🔐 Đăng nhập Admin</h1>
-  <p>Trang quản trị nội dung tour VietKite. Mật khẩu mặc định: <strong>vietkite2026</strong> (đổi trong file admin.html, dòng CONFIG).</p>
+  <p>Trang quản trị nội dung tour VietKite. Mật khẩu: <strong>vietkite2026</strong>. Sau khi sửa phải <strong>upload content.json</strong> lên web thì máy khác mới thấy.</p>
   <label>Mật khẩu</label>
   <input type="password" id="loginPass" placeholder="Nhập mật khẩu" autocomplete="current-password">
   <button class="btn btn-p" type="button" onclick="doLogin()">Đăng nhập</button>
@@ -92,10 +94,10 @@ textarea{min-height:80px;resize:vertical}
     <div class="hdr">
       <div>
         <h1>Quản trị nội dung web</h1>
-        <span style="font-size:12px;color:var(--muted)">Lưu trên trình duyệt này · <a href="index.html" target="_blank">Mở trang web ↗</a></span>
+        <span style="font-size:12px;color:var(--muted)"><a href="index.html" target="_blank">Mở trang web ↗</a></span>
       </div>
       <div class="hdr-actions">
-        <button class="btn btn-g" type="button" onclick="saveAll()">💾 Lưu thay đổi</button>
+        <button class="btn btn-g" type="button" onclick="saveAll()">💾 Lưu &amp; tải content.json</button>
         <button class="btn btn-o" type="button" onclick="exportJson()">⬇ Xuất JSON</button>
         <button class="btn btn-o" type="button" onclick="document.getElementById('importFile').click()">⬆ Nhập JSON</button>
         <input type="file" id="importFile" accept=".json" class="hidden" onchange="importJson(event)">
@@ -104,11 +106,21 @@ textarea{min-height:80px;resize:vertical}
       </div>
     </div>
 
+    <div class="status-box" id="cmsStatus">Đang tải...</div>
+
+    <div class="warn-box" id="fileProtocolWarn" style="display:none">
+      <strong>⚠️ Đang mở file trực tiếp từ máy (file://)</strong>
+      Trình duyệt không đọc được content.json. Chỉ máy bạn thấy thay đổi (localStorage).
+      Để <strong>mọi máy / điện thoại</strong> xem giống nhau: đưa web lên hosting và upload file <strong>content.json</strong> sau mỗi lần Lưu.
+    </div>
+
     <div class="info-box">
-      <strong>Hướng dẫn cho khách hàng</strong>
-      Sửa text hoặc dán link ảnh mới → bấm <strong>Lưu thay đổi</strong> → mở <strong>index.html</strong> trên cùng trình duyệt để xem.
-      Danh sách dùng dấu <code>|</code> để ngăn cách mỗi dòng (lịch trình, ghi chú, bảng giá...).
-      <strong>Xuất JSON</strong> để sao lưu; <strong>Nhập JSON</strong> khi chuyển máy khác.
+      <strong>Cách để máy khác thấy nội dung đã sửa</strong>
+      1. Sửa xong → bấm <strong>Lưu &amp; tải content.json</strong> (trình duyệt tải file).<br>
+      2. Upload <strong>content.json</strong> lên hosting, cùng thư mục với index.html (thay file cũ).<br>
+      3. Mọi người mở link web (https://...) sẽ thấy bản mới.<br>
+      <em>Chưa có hosting?</em> Gửi file content.json sang máy kia → Admin → <strong>Nhập JSON</strong>.
+      Danh sách nhiều dòng: cách nhau bằng <code>|</code>.
     </div>
 
     <input type="search" class="search" id="searchBox" placeholder="🔍 Tìm nội dung cần sửa..." oninput="filterFields()">
@@ -211,11 +223,22 @@ function logout() {
 function showAdmin() {
   document.getElementById("loginScreen").classList.add("hidden");
   document.getElementById("adminApp").classList.remove("hidden");
-  buildForm();
+  if (location.protocol === "file:") {
+    document.getElementById("fileProtocolWarn").style.display = "block";
+  }
+  CMS_loadRemote().then(function () {
+    updateStatusBanner();
+    buildForm();
+  });
+}
+
+function updateStatusBanner() {
+  var el = document.getElementById("cmsStatus");
+  if (el) el.textContent = "Nguồn hiện tại: " + CMS_getSourceLabel();
 }
 
 function buildForm() {
-  var content = CMS_getContent();
+  var content = CMS_getContentForAdmin();
   var root = document.getElementById("sectionsRoot");
   root.innerHTML = "";
 
@@ -327,18 +350,15 @@ function collectForm() {
 function saveAll() {
   var data = collectForm();
   CMS_saveContent(data);
-  toast("✅ Đã lưu! Mở index.html để xem thay đổi.");
+  CMS_downloadJson(data, "content.json");
+  toast("✅ Đã lưu! Upload content.json lên hosting để máy khác xem.");
 }
 
 function exportJson() {
   var data = collectForm();
   CMS_saveContent(data);
-  var blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-  var a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "vietkite-noi-dung-" + new Date().toISOString().slice(0, 10) + ".json";
-  a.click();
-  toast("Đã tải file JSON");
+  CMS_downloadJson(data, "content.json");
+  toast("Đã tải content.json");
 }
 
 function importJson(ev) {
@@ -349,8 +369,10 @@ function importJson(ev) {
     try {
       var data = JSON.parse(e.target.result);
       CMS_saveContent(data);
+      window.CMS_fileData = data;
+      updateStatusBanner();
       buildForm();
-      toast("✅ Đã nhập JSON thành công");
+      toast("✅ Đã nhập JSON — nhớ Lưu & upload content.json lên web");
     } catch (err) {
       alert("File JSON không hợp lệ!");
     }
